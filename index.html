@@ -10,21 +10,40 @@
         <script type="module">
         import * as THREE from 'three';
 
-        var scene = new THREE.Scene();
+var scene = new THREE.Scene(); // creates a new THREE.js scene
+var camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 0.1, 3000);
+camera.position.z = 800; // position the camera
+camera.lookAt(new THREE.Vector3(0.0, 0.0, 0.0)); // sets camera to the origin
+scene.add(camera); // adds camera to the scene
 
-        var camera = new THREE.PerspectiveCamera( 35, window.innerWidth / window.innerHeight, .1, 3000 );
-        camera.position.z = 100;  
-        camera.lookAt( new THREE.Vector3(0.0,0.0,0.0));
-        scene.add( camera );
+var renderer = new THREE.WebGLRenderer({canvas: myCanvas, antialias: true});
+renderer.setClearColor(0xFFFFFF); // sets background to white
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.setSize(window.innerWidth, window.innerHeight);
 
-        var renderer = new THREE.WebGLRenderer({canvas: myCanvas, antialias: true});
-        renderer.setClearColor(0x000000);
-        renderer.setPixelRatio(window.devicePixelRatio);
-        renderer.setSize(window.innerWidth, window.innerHeight);
+function createOctagon() {
+    const radius = 210; // radius of the octagon 
+    const points = [ // points array to store the 8 vertices of the octagon
+    new THREE.Vector2(radius, 0), // point 1
+    new THREE.Vector2(radius * Math.cos(Math.PI / 4), radius * Math.sin(Math.PI / 4)), // point 2
+    new THREE.Vector2(0, radius), // point 3
+    new THREE.Vector2(-radius * Math.cos(Math.PI / 4), radius * Math.sin(Math.PI / 4)), // point 4
+    new THREE.Vector2(-radius, 0), // point 5
+    new THREE.Vector2(-radius * Math.cos(Math.PI / 4), -radius * Math.sin(Math.PI / 4)), // point 6
+    new THREE.Vector2(0, -radius), // point 7
+    new THREE.Vector2(radius * Math.cos(Math.PI / 4), -radius * Math.sin(Math.PI / 4)),]; // point 8
 
+    const geometry = new THREE.BufferGeometry().setFromPoints(points); // creates the geometry of the points
+    const material = new THREE.LineBasicMaterial({ color: 0x000000 }); // creates the material for the lines with the color black
 
+    const outlinedOctagon = new THREE.LineLoop(geometry, material); // uses a LineLoop to create the outlined octagon
 
-        renderer.render( scene, camera );
+    scene.add(outlinedOctagon); // adds the outlined octagon to the scene
+}
+
+createOctagon(); // Call the function to create the octagon
+
+renderer.render(scene, camera); // renders the scene and positions the camera
         </script>
     </body>
 </html>
