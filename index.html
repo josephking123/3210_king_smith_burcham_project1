@@ -168,7 +168,7 @@ function onMouseMove(event) {
     }
 }
 
-var click = new Audio('click.mp3');
+var click = new Audio('click.mp3'); //audio for when piece clicks in place
 
 function onMouseUp() {
     if (selectedMesh) { // If a mesh is selected
@@ -178,7 +178,8 @@ function onMouseUp() {
         if (distance < 20) { // how close piece needs to be to snap
             selectedMesh.position.copy(targetPos); // Snap to target position
             selectedMesh.snapped = true; // Mark triangle as snapped
-            click.play();
+            click.play(); //plays click audio
+            selectedMesh.material = new THREE.MeshBasicMaterial({color : 0x00ff00, side : THREE.DoubleSide });
         }
         selectedMesh = null;
     }
