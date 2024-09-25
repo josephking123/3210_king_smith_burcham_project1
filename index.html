@@ -12,17 +12,20 @@
 <canvas id="myCanvas" width="1200" height="900"></canvas>
 
 <script type="module">
-import * as THREE from 'three';
+import * as THREE from 'three'; // Imports the THREE.js library
 
+// sets up the scene
 const canvas = document.getElementById('myCanvas');
 const scene = new THREE.Scene();
+// creates the perspective camera
 const camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 0.1, 3000);
-camera.position.z = 1500;
-camera.lookAt(new THREE.Vector3(0.0, 0.0, 0.0));
-scene.add(camera);
+camera.position.z = 1500; // how far back the camera is to the canvas
+camera.lookAt(new THREE.Vector3(0.0, 0.0, 0.0)); // looks at origin
+scene.add(camera); // adds the camera to the scene
 
+// WebGL render
 const renderer = new THREE.WebGLRenderer({canvas: canvas, antialias: true});
-renderer.setClearColor(0xFFFFFF);
+renderer.setClearColor(0xFFFFFF); // Sets background color to white
 renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(window.innerWidth, window.innerHeight);
 
@@ -40,22 +43,22 @@ const octagonVertices = [
 
 // Define internal vertices
 const internalVertices = [
-    new THREE.Vector2(0, 0),
+    new THREE.Vector2(0, 0), 
     new THREE.Vector2(-50, 175)
 ];
 
 // Define triangles using octagon and internal vertices
 const predefinedTriangles = [
-    [octagonVertices[1], internalVertices[0], octagonVertices[0]], //t1
-    [octagonVertices[2], internalVertices[0], octagonVertices[1]], //t2
-    [octagonVertices[3], internalVertices[0], octagonVertices[2]], //t3
-    [octagonVertices[4], internalVertices[0], octagonVertices[3]], //t4
-    [octagonVertices[5], internalVertices[0], octagonVertices[4]], //t5
-    [internalVertices[1], internalVertices[0], octagonVertices[5]], //t6
-    [octagonVertices[6], internalVertices[1], octagonVertices[5]], //t7
-    [octagonVertices[7], internalVertices[1], octagonVertices[6]], //t8
-    [internalVertices[1], octagonVertices[7], internalVertices[0]], //t9
-    [internalVertices[0], octagonVertices[7], octagonVertices[0]]  //t10
+    [octagonVertices[1], internalVertices[0], octagonVertices[0]], //triangle 1
+    [octagonVertices[2], internalVertices[0], octagonVertices[1]], //triangle 2
+    [octagonVertices[3], internalVertices[0], octagonVertices[2]], //triangle 3
+    [octagonVertices[4], internalVertices[0], octagonVertices[3]], //triangle 4
+    [octagonVertices[5], internalVertices[0], octagonVertices[4]], //triangle 5
+    [internalVertices[1], internalVertices[0], octagonVertices[5]], //triangle 6
+    [octagonVertices[6], internalVertices[1], octagonVertices[5]], //triangle 7
+    [octagonVertices[7], internalVertices[1], octagonVertices[6]], //triangle 8
+    [internalVertices[1], octagonVertices[7], internalVertices[0]], //triangle 9
+    [internalVertices[0], octagonVertices[7], octagonVertices[0]]  //triangle 10
 ];
 
 // Spread out triangle positions
@@ -72,17 +75,18 @@ const trianglePositions = [
     { x: 500, y: 300 }    // Position for triangle 10
 ];
 
+// triangleTargets for the 'snapping' feature
 const triangleTargets = [
-    { x: -250, y: -125 }, // Target for triangle 1
-    { x: -125, y: -250 }, // Target for triangle 2
-    { x: 125, y: -250 },  // Target for triangle 3
-    { x: 250, y: -125 },  // Target for triangle 4
-    { x: 250, y: 125 },   // Target for triangle 5
-    { x: 125, y: 250 },   // Target for triangle 6
-    { x: -125, y: 250 },  // Target for triangle 7
-    { x: -250, y: 125 },  // Target for triangle 8
-    { x: 0, y: 0 },       // Target for triangle 9
-    { x: -50, y: 175 }    // Target for triangle 10
+    { x: 0, y: 0 }, // Target for triangle 1
+    { x: 0, y: 0 }, // Target for triangle 2
+    { x: 0, y: 0 }, // Target for triangle 3
+    { x: 0, y: 0 }, // Target for triangle 4
+    { x: 0, y: 0 }, // Target for triangle 5
+    { x: 0, y: 0 }, // Target for triangle 6
+    { x: 0, y: 0 }, // Target for triangle 7
+    { x: 0, y: 0 }, // Target for triangle 8
+    { x: 0, y: 0 }, // Target for triangle 9
+    { x: 0, y: 0 }  // Target for triangle 10
 ];
 
 function createTriangle(vertices) {
@@ -94,34 +98,33 @@ function createTriangle(vertices) {
     return triangleShape;
 }
 
-const triangleMeshes = [];
+const triangleMeshes = []; // array that hold triangle meshes
 
 // Add triangles to the scene at predetermined positions
 function addTrianglesToScene(triangles, positions) {
     triangles.forEach((vertices, index) => {
-        const triangle = createTriangle(vertices);
+        const triangle = createTriangle(vertices); // create triangle shape
         const geometry = new THREE.ShapeGeometry(triangle);
-        const material = new THREE.MeshBasicMaterial({ color: Math.random() * 0xffffff, side: THREE.DoubleSide });
-        const mesh = new THREE.Mesh(geometry, material);
+        const material = new THREE.MeshBasicMaterial({ color: Math.random() * 0xffffff, side: THREE.DoubleSide }); // random color
+        const mesh = new THREE.Mesh(geometry, material); // create mesh from geometry and material
 
-        // Set the position of the triangle based on predetermined positions
         mesh.position.set(positions[index].x, positions[index].y, 0);
-        mesh.targetPosition = new THREE.Vector3(triangleTargets[index].x, triangleTargets[index].y, 0); // Set target position
+        mesh.targetPosition = new THREE.Vector3(triangleTargets[index].x, triangleTargets[index].y, 0); // Set target position for snapping later
         mesh.snapped = false; // Track if the triangle is snapped
-        triangleMeshes.push(mesh);
-        scene.add(mesh);
+        triangleMeshes.push(mesh); // push mesh into triangleMeshes array
+        scene.add(mesh); // adds mesh to the scene
     });
 }
 
 // Function to create the octagon outline
 function createOctagon() {
     const geometry = new THREE.BufferGeometry().setFromPoints(octagonVertices);
-    const material = new THREE.LineBasicMaterial({ color: 0x000000 });
-    const outlinedOctagon = new THREE.LineLoop(geometry, material);
-    scene.add(outlinedOctagon);
+    const material = new THREE.LineBasicMaterial({ color: 0x000000 }); // color black
+    const outlinedOctagon = new THREE.LineLoop(geometry, material); // uses LineLoop to draw the outline
+    scene.add(outlinedOctagon); // adds octagon outline to the scene
 }
 
-createOctagon();
+createOctagon(); // calls the createOctagon function
 addTrianglesToScene(predefinedTriangles, trianglePositions); // Use predefined triangles and their positions
 
 // Handle mouse events for dragging
@@ -166,30 +169,30 @@ function onMouseMove(event) {
 }
 
 function onMouseUp() {
-    if (selectedMesh) {
-        const targetPos = selectedMesh.targetPosition;
-        const distance = selectedMesh.position.distanceTo(targetPos);
+    if (selectedMesh) { // If a mesh is selected
+        const targetPos = selectedMesh.targetPosition; // Get target position for snapping
+        const distance = selectedMesh.position.distanceTo(targetPos); // Calculate distance to target position
 
-        // Snap to position if close enough
-        if (distance < 30) { // Adjust snapping threshold as needed
-            selectedMesh.position.copy(targetPos);
+        if (distance < 20) { // how close piece needs to be to snap
+            selectedMesh.position.copy(targetPos); // Snap to target position
             selectedMesh.snapped = true; // Mark triangle as snapped
-            selectedMesh.material.color.set(0x00ff00); // Optional: change color to indicate it's snapped
         }
         selectedMesh = null;
     }
 }
 
+// add the mouse events to canvas
 canvas.addEventListener('mousedown', onMouseDown);
 canvas.addEventListener('mousemove', onMouseMove);
 canvas.addEventListener('mouseup', onMouseUp);
 
+// Animation loop
 function animate() {
     requestAnimationFrame(animate);
-    renderer.render(scene, camera);
+    renderer.render(scene, camera); // renders the scene
 }
 
-animate();
+animate(); // calls animate function
 </script>
 </body>
 </html>
