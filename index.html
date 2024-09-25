@@ -9,7 +9,7 @@
 </head>
 <body>
 
-<canvas id="myCanvas" width="1200" height=""></canvas>
+<canvas id="myCanvas" width="1200" height="900"></canvas>
 
 <script type="module">
 import * as THREE from 'three';
@@ -17,7 +17,7 @@ import * as THREE from 'three';
 const canvas = document.getElementById('myCanvas');
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 0.1, 3000);
-camera.position.z = 800;
+camera.position.z = 1500;
 camera.lookAt(new THREE.Vector3(0.0, 0.0, 0.0));
 scene.add(camera);
 
@@ -38,13 +38,13 @@ const octagonVertices = [
     new THREE.Vector2(-250, 125) //7
 ];
 
-// Define internal vertices to ensure proper tiling
+// Define internal vertices
 const internalVertices = [
-    new THREE.Vector2(0,0),
-    new THREE.Vector2(-50,175)
+    new THREE.Vector2(0, 0),
+    new THREE.Vector2(-50, 175)
 ];
 
-// Define triangles using octagon and internal vertices without overlaps
+// Define triangles using octagon and internal vertices
 const predefinedTriangles = [
     [octagonVertices[1], internalVertices[0], octagonVertices[0]], //t1
     [octagonVertices[2], internalVertices[0], octagonVertices[1]], //t2
@@ -55,29 +55,59 @@ const predefinedTriangles = [
     [octagonVertices[6], internalVertices[1], octagonVertices[5]], //t7
     [octagonVertices[7], internalVertices[1], octagonVertices[6]], //t8
     [internalVertices[1], octagonVertices[7], internalVertices[0]], //t9
-    [internalVertices[0], octagonVertices[7], octagonVertices[0]] //t10
+    [internalVertices[0], octagonVertices[7], octagonVertices[0]]  //t10
 ];
 
-// Function to create triangles from predefined vertices
+// Spread out triangle positions
+const trianglePositions = [
+    { x: -400, y: -150 }, // Position for triangle 1
+    { x: -450, y: 200 },  // Position for triangle 2
+    { x: 300, y: -200 },  // Position for triangle 3
+    { x: 350, y: 100 },   // Position for triangle 4
+    { x: -400, y: -450 }, // Position for triangle 5
+    { x: 150, y: -450 },  // Position for triangle 6
+    { x: -250, y: 100 },  // Position for triangle 7
+    { x: 200, y: 150 },   // Position for triangle 8
+    { x: 100, y: -450 },  // Position for triangle 9
+    { x: 500, y: 300 }    // Position for triangle 10
+];
+
+const triangleTargets = [
+    { x: -250, y: -125 }, // Target for triangle 1
+    { x: -125, y: -250 }, // Target for triangle 2
+    { x: 125, y: -250 },  // Target for triangle 3
+    { x: 250, y: -125 },  // Target for triangle 4
+    { x: 250, y: 125 },   // Target for triangle 5
+    { x: 125, y: 250 },   // Target for triangle 6
+    { x: -125, y: 250 },  // Target for triangle 7
+    { x: -250, y: 125 },  // Target for triangle 8
+    { x: 0, y: 0 },       // Target for triangle 9
+    { x: -50, y: 175 }    // Target for triangle 10
+];
+
 function createTriangle(vertices) {
     const triangleShape = new THREE.Shape();
     triangleShape.moveTo(vertices[0].x, vertices[0].y);
     triangleShape.lineTo(vertices[1].x, vertices[1].y);
     triangleShape.lineTo(vertices[2].x, vertices[2].y);
     triangleShape.closePath();
-    
     return triangleShape;
 }
 
 const triangleMeshes = [];
 
-// Add triangles to the scene
-function addTrianglesToScene(triangles) {
-    triangles.forEach((vertices) => {
+// Add triangles to the scene at predetermined positions
+function addTrianglesToScene(triangles, positions) {
+    triangles.forEach((vertices, index) => {
         const triangle = createTriangle(vertices);
         const geometry = new THREE.ShapeGeometry(triangle);
         const material = new THREE.MeshBasicMaterial({ color: Math.random() * 0xffffff, side: THREE.DoubleSide });
         const mesh = new THREE.Mesh(geometry, material);
+
+        // Set the position of the triangle based on predetermined positions
+        mesh.position.set(positions[index].x, positions[index].y, 0);
+        mesh.targetPosition = new THREE.Vector3(triangleTargets[index].x, triangleTargets[index].y, 0); // Set target position
+        mesh.snapped = false; // Track if the triangle is snapped
         triangleMeshes.push(mesh);
         scene.add(mesh);
     });
@@ -92,7 +122,7 @@ function createOctagon() {
 }
 
 createOctagon();
-addTrianglesToScene(predefinedTriangles); // Use predefined triangles
+addTrianglesToScene(predefinedTriangles, trianglePositions); // Use predefined triangles and their positions
 
 // Handle mouse events for dragging
 let selectedMesh = null;
@@ -109,8 +139,14 @@ function onMouseDown(event) {
     const intersects = raycaster.intersectObjects(triangleMeshes);
     if (intersects.length > 0) {
         selectedMesh = intersects[0].object;
-        const intersectionPoint = intersects[0].point;
-        offset.copy(selectedMesh.position).sub(intersectionPoint);
+
+        // Allow dragging only if not snapped
+        if (!selectedMesh.snapped) {
+            const intersectionPoint = intersects[0].point;
+            offset.copy(selectedMesh.position).sub(intersectionPoint);
+        } else {
+            selectedMesh = null; // Don't select snapped triangles
+        }
     }
 }
 
@@ -131,6 +167,15 @@ function onMouseMove(event) {
 
 function onMouseUp() {
     if (selectedMesh) {
+        const targetPos = selectedMesh.targetPosition;
+        const distance = selectedMesh.position.distanceTo(targetPos);
+
+        // Snap to position if close enough
+        if (distance < 30) { // Adjust snapping threshold as needed
+            selectedMesh.position.copy(targetPos);
+            selectedMesh.snapped = true; // Mark triangle as snapped
+            selectedMesh.material.color.set(0x00ff00); // Optional: change color to indicate it's snapped
+        }
         selectedMesh = null;
     }
 }
