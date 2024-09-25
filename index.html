@@ -95,7 +95,7 @@ function createTriangle(vertices) {
     triangleShape.lineTo(vertices[1].x, vertices[1].y);
     triangleShape.lineTo(vertices[2].x, vertices[2].y);
     triangleShape.closePath();
-    return triangleShape;
+    return triangleShape; 
 }
 
 const triangleMeshes = []; // array that hold triangle meshes
@@ -168,6 +168,8 @@ function onMouseMove(event) {
     }
 }
 
+var click = new Audio('click.mp3');
+
 function onMouseUp() {
     if (selectedMesh) { // If a mesh is selected
         const targetPos = selectedMesh.targetPosition; // Get target position for snapping
@@ -176,6 +178,7 @@ function onMouseUp() {
         if (distance < 20) { // how close piece needs to be to snap
             selectedMesh.position.copy(targetPos); // Snap to target position
             selectedMesh.snapped = true; // Mark triangle as snapped
+            click.play();
         }
         selectedMesh = null;
     }
