@@ -5,12 +5,22 @@
     <style>
         body { margin: 0; }
         canvas { display: block; }
+        #winMessage{
+        position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            color: green;
+            display: none; /* Hidden until puzzle is complete */
+        }
     </style>
 </head>
 <body>
 
 <canvas id="myCanvas" width="1200" height="900"></canvas>
-
+<div id="winMessage">You Won!</div>
+<audio id="winSound" src="https://www.soundjay.com/human/sounds/applause-8.mp3"></audio> <!-- Win sound -->
 <script type="module">
 import * as THREE from 'three'; // Imports the THREE.js library
 
@@ -131,7 +141,26 @@ addTrianglesToScene(predefinedTriangles, trianglePositions); // Use predefined t
 let selectedMesh = null;
 let mousePosition = new THREE.Vector2();
 let offset = new THREE.Vector3();
+    // Track how many triangles are snapped
+let snappedCount = 0;
 
+function checkWinCondition() {
+    if (snappedCount === triangleMeshes.length) {
+        document.getElementById('winMessage').style.display = 'block'; // Show win message
+        playWinSound(); // Play win sound
+    }
+}
+function playWinSound() {
+    const winSound = document.getElementById('winSound');
+    if (winSound) {
+        winSound.currentTime = 0; // Reset sound to start
+        winSound.play().then(() => {
+            console.log("Win sound played successfully");
+        }).catch(error => {
+            console.error("Win sound failed to play:", error);
+        });
+    }
+}
 function onMouseDown(event) {
     mousePosition.x = (event.clientX / window.innerWidth) * 2 - 1;
     mousePosition.y = -(event.clientY / window.innerHeight) * 2 + 1;
@@ -179,6 +208,9 @@ function onMouseUp() {
             selectedMesh.position.copy(targetPos); // Snap to target position
             selectedMesh.snapped = true; // Mark triangle as snapped
             click.play(); //plays click audio
+                        snappedCount++; // Increase snapped count
+            checkWinCondition(); // Check if all pieces are snapped
+
             selectedMesh.material = new THREE.MeshBasicMaterial({color : 0x00ff00, side : THREE.DoubleSide });
         }
         selectedMesh = null;
